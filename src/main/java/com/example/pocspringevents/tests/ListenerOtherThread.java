@@ -3,17 +3,19 @@ package com.example.pocspringevents.tests;
 import com.example.pocspringevents.model.MyEntity;
 import com.example.pocspringevents.model.MyEntityRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @Slf4j
-public class ListenerOnTheSameThread {
+@Async
+public class ListenerOtherThread {
 
   private final MyEntityRepository repository;
 
-  public ListenerOnTheSameThread(MyEntityRepository repository) {
+  public ListenerOtherThread(MyEntityRepository repository) {
     this.repository = repository;
   }
 
@@ -41,13 +43,12 @@ public class ListenerOnTheSameThread {
     log(event, TransactionPhase.AFTER_COMPLETION);
   }
 
-  // FIXME - Testar manipulação do objeto na thread principal / async
-
   private void log(MyEvent event, TransactionPhase phase) {
     final MyEntity entity = event.getEntity();
-    if (!entity.isSameThread()) {
+    if (entity.isSameThread()) {
       throw new RuntimeException(String.format("The event was originated in a other thread. "
-          + "Event Thread=[%s] Current Thread=[%s]", entity.getSourceThread(), Thread.currentThread().getName()));
+              + "Event Thread=[%s] Current Thread=[%s]", entity.getSourceThread(),
+          Thread.currentThread().getName()));
     }
     log.info("[{}] Listen {} - {}", entity.id, phase, entity);
   }
