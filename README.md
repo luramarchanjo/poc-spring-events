@@ -28,10 +28,12 @@ GET http://localhost:8080/other-thread/transaction-commit
 ### Listener at different Thread - Transaction Rollback
 
 GET http://localhost:8080/other-thread/transaction-rollback
-``
+```
 
 # Annotations
 
-When you use the `@Async` and you try to manipulate the entity. It will be at detached state.
+When you use the `@Async` and you try to manipulate the entity. It will be
+at [detached state](https://openjpa.apache.org/builds/1.2.3/apache-openjpa/docs/jpa_overview_em_lifecycle.html)
+.
 
 # Be Happy
