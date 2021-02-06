@@ -2,6 +2,7 @@ package com.example.pocspringevents.tests;
 
 import com.example.pocspringevents.model.MyEntity;
 import com.example.pocspringevents.model.MyEntityRepository;
+import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,10 @@ public class ListenerThrowingException {
   }
 
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-  public void listenBeforeCommit(MyRollbackEvent event) {
+  public void listenBeforeCommit(MyRollbackEvent event) throws InterruptedException {
     // Throwing exception on the same case to force rollback até the main process
+    TimeUnit.SECONDS.sleep(5);
+    log(event, TransactionPhase.BEFORE_COMMIT);
     throw new RuntimeException("I am forcing a transaction rollback. Please ignore this Exception");
   }
 
