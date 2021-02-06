@@ -2,63 +2,61 @@ package com.example.pocspringevents.tests;
 
 import com.example.pocspringevents.model.MyEntity;
 import com.example.pocspringevents.model.MyEntityRepository;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class ListenerSameThread {
+public class OtherThreadListener {
 
   private final MyEntityRepository repository;
 
-  public ListenerSameThread(MyEntityRepository repository) {
+  public OtherThreadListener(MyEntityRepository repository) {
     this.repository = repository;
   }
 
+  @Async
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-  public void listenBeforeCommit(MyEvent event) {
-    // Should have the CreatedAt and StartAt field null
-    updateSourceAndLog(event, TransactionPhase.BEFORE_COMMIT);
+  public void listenBeforeCommit(OtherThreadEvent event) throws InterruptedException {
+    // Maybe the CreatedAt and StartAt field can be populated
+    log(event, TransactionPhase.BEFORE_COMMIT);
   }
 
+  @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  public void listenAfterCommit(MyEvent event) {
+  public void listenAfterCommit(OtherThreadEvent event) throws InterruptedException {
     // Should have the CreatedAt and StartAt field populated
-    updateSourceAndLog(event, TransactionPhase.AFTER_COMMIT);
+    log(event, TransactionPhase.AFTER_COMMIT);
   }
 
+  @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-  public void listenAfterRollback(MyEvent event) {
+  public void listenAfterRollback(OtherThreadEvent event) throws InterruptedException {
     // Can be used to apply Saga Pattern
-    updateSourceAndLog(event, TransactionPhase.AFTER_ROLLBACK);
+    log(event, TransactionPhase.AFTER_ROLLBACK);
   }
 
+  @Async
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
-  public void listenAfterCompletion(MyEvent event) {
+  public void listenAfterCompletion(OtherThreadEvent event) throws InterruptedException {
     // Can be used to apply Saga Pattern
-    updateSourceAndLog(event, TransactionPhase.AFTER_COMPLETION);
+    log(event, TransactionPhase.AFTER_COMPLETION);
   }
 
-  private void updateSourceAndLog(MyEvent event, TransactionPhase phase) {
+  private void log(OtherThreadEvent event, TransactionPhase phase) throws InterruptedException {
     final MyEntity entity = event.getEntity();
-    updateSource(entity);
-
-    if (!entity.isSameThread()) {
+    if (entity.isSameThread()) {
       throw new RuntimeException(String.format("The event was originated in a other thread. "
               + "Event Thread=[%s] Current Thread=[%s]", entity.getSourceThread(),
           Thread.currentThread().getName()));
     }
 
+    TimeUnit.SECONDS.sleep(3); // Simulating slow, should not impact, because is @Async
     log.info("[{}] Listen {} - {}", entity.id, phase, entity);
-  }
-
-  private void updateSource(final MyEntity entity) {
-    Assert.notNull(entity, "Parameter must not be null");
-    entity.setSourceClass(getClass().getSimpleName());
-    this.repository.save(entity);
   }
 
 }

@@ -3,7 +3,6 @@ package com.example.pocspringevents.tests;
 import com.example.pocspringevents.model.MyEntity;
 import com.example.pocspringevents.model.MyEntityRepository;
 import java.util.concurrent.TimeUnit;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -11,29 +10,28 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @Slf4j
-public class ListenerThrowingException {
+public class ExceptionListener {
 
   private final MyEntityRepository repository;
 
-  public ListenerThrowingException(MyEntityRepository repository) {
+  public ExceptionListener(MyEntityRepository repository) {
     this.repository = repository;
   }
 
   @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-  public void listenBeforeCommit(MyRollbackEvent event) throws InterruptedException {
+  public void listenBeforeCommit(ExceptionEvent event) throws InterruptedException {
     // Throwing exception on the same case to force rollback até the main process
-    TimeUnit.SECONDS.sleep(5);
+    TimeUnit.SECONDS.sleep(3);
     log(event, TransactionPhase.BEFORE_COMMIT);
     throw new RuntimeException("I am forcing a transaction rollback. Please ignore this Exception");
   }
 
   @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
-  public void listenAfterRollback(MyRollbackEvent event) {
+  public void listenAfterRollback(ExceptionEvent event) {
     log(event, TransactionPhase.AFTER_ROLLBACK);
   }
 
-  @SneakyThrows
-  private void log(MyRollbackEvent event, TransactionPhase phase) {
+  private void log(ExceptionEvent event, TransactionPhase phase) {
     final MyEntity entity = event.getEntity();
     if (!entity.isSameThread()) {
       throw new RuntimeException(String.format("The event was originated in a other thread. "

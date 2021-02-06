@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 @RequiredArgsConstructor
-public class MyEvent {
+public class ExceptionEvent {
 
   private final MyEntity entity;
 

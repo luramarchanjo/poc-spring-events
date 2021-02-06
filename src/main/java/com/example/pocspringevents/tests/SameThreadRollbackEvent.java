@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Data
 @RequiredArgsConstructor
-public class MyRollbackEvent {
+public class SameThreadRollbackEvent {
 
   private final MyEntity entity;
 

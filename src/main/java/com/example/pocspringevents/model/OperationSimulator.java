@@ -1,7 +1,8 @@
 package com.example.pocspringevents.model;
 
-import com.example.pocspringevents.tests.MyEvent;
-import com.example.pocspringevents.tests.MyRollbackEvent;
+import com.example.pocspringevents.tests.ExceptionEvent;
+import com.example.pocspringevents.tests.OtherThreadEvent;
+import com.example.pocspringevents.tests.SameThreadEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,26 +18,23 @@ public class OperationSimulator {
   private final MyEntityRepository repository;
 
   @Transactional
-  public void simulateTransactionCommit() {
+  public void simulateTransactionCommit(final boolean sameThread) {
     // Should trigger the BEFORE_COMMIT, AFTER_COMMIT and AFTER_COMPLETION listeners
-    savedEntityAndPublishEvent();
+    savedEntityAndPublishEvent(sameThread);
   }
 
   @Transactional
-  public void simulateTransactionRollback() {
+  public void simulateTransactionRollback(final boolean sameThread) {
     // Should trigger the AFTER_ROLLBACK and AFTER_COMPLETION listeners
-    savedEntityAndPublishEvent();
+    savedEntityAndPublishEvent(sameThread);
     throw new RuntimeException("I am forcing a transaction rollback. Please ignore this Exception");
   }
 
   @Transactional
   public void simulateErrorAndSlowAtListener() {
-    final long started = System.currentTimeMillis();
-    log.info("Started - Listener slow and throwing error");
-    final MyEntity entity = saveEntity();
-    this.eventPublisher.publishEvent(new MyRollbackEvent(entity));
-    log.info("Finished=[{}] - Listener slow and throwing error",
-        System.currentTimeMillis() - started);
+    final MyEntity savedEntity = saveEntity();
+    final ExceptionEvent event = new ExceptionEvent(savedEntity);
+    this.eventPublisher.publishEvent(event);
   }
 
   private MyEntity saveEntity() {
@@ -44,9 +42,10 @@ public class OperationSimulator {
     return this.repository.save(entity);
   }
 
-  private MyEntity savedEntityAndPublishEvent() {
+  private MyEntity savedEntityAndPublishEvent(final boolean sameThread) {
     final MyEntity savedEntity = saveEntity();
-    final MyEvent event = new MyEvent(savedEntity);
+    final Object event =
+        sameThread ? new SameThreadEvent(savedEntity) : new OtherThreadEvent(savedEntity);
     this.eventPublisher.publishEvent(event);
 
     return savedEntity;
