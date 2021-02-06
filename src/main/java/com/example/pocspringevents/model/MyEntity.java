@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.util.Assert;
 
 @Data
 @Entity
@@ -19,7 +20,7 @@ public class MyEntity {
   public String id = UUID.randomUUID().toString();
 
   @Column(nullable = false)
-  private final String sourceClass;
+  private String sourceClass;
 
   @Column(nullable = false)
   private final String sourceThread = Thread.currentThread().getName();
@@ -32,11 +33,11 @@ public class MyEntity {
 
   @Deprecated
   public MyEntity() {
-    this.sourceClass = null;
+    // Do nothing
   }
 
-  public MyEntity(String sourceClass) {
-    // Do nothing
+  public MyEntity(final String sourceClass) {
+    Assert.notNull(sourceClass, "Parameter must not be null");
     this.sourceClass = sourceClass;
   }
 
