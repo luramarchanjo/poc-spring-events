@@ -1,6 +1,7 @@
 package com.example.pocspringevents.model;
 
 import com.example.pocspringevents.tests.MyEvent;
+import com.example.pocspringevents.tests.MyRollbackEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,18 +26,28 @@ public class OperationSimulator {
 
   @Transactional
   @Scheduled(fixedDelayString = "60000")
+  public void s() {
+    // Should trigger the BEFORE_COMMIT, AFTER_COMMIT and AFTER_COMPLETION listeners
+    final MyEntity entity = saveEntity();
+    this.eventPublisher.publishEvent(new MyRollbackEvent(entity));
+  }
+
+  @Transactional
+  @Scheduled(fixedDelayString = "60000")
   public void simulateTransactionRollback() {
     // Should trigger the AFTER_ROLLBACK and AFTER_COMPLETION listeners
     saveEntity();
     throw new RuntimeException("I am forcing a transaction rollback. Please ignore this Exception");
   }
 
-  private void saveEntity() {
+  private MyEntity saveEntity() {
     final MyEntity entity = new MyEntity(this.getClass().getSimpleName());
     final MyEntity savedEntity = this.repository.save(entity);
 
     final MyEvent event = new MyEvent(savedEntity);
     this.eventPublisher.publishEvent(event);
+
+    return entity;
   }
 
 }

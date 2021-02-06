@@ -61,7 +61,4 @@ public class ListenerSameThread {
     this.repository.save(entity);
   }
 
-  // FIXME - Testar exceção no publish
-  // FIXME - Testar delay na mesma thread
-
 }
