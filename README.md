@@ -8,8 +8,7 @@ First, you need to start you application.
 
 Second, you need to do some requests to simulate the variety of tests listed below:
 
-```http request`
-
+```http request
 ### Listener at same Thread - Transaction Commit
 
 GET http://localhost:8080/same-thread/transaction-commit
@@ -30,5 +29,9 @@ GET http://localhost:8080/other-thread/transaction-commit
 
 GET http://localhost:8080/other-thread/transaction-rollback
 ``
+
+# Annotations
+
+When you use the `@Async` and you try to manipulate the entity. It will be at detached state.
 
 # Be Happy
